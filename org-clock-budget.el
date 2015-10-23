@@ -96,7 +96,7 @@ Currently supported properties are BUDGET_WEEK and BUDGET_YEAR."
    (lambda () (get-text-property (point) key))))
 
 (defun org-clock-budget--set-column-property (key value)
-  "Set column property KEY."
+  "Set column property KEY to VALUE."
   (org-clock-budget--with-column-header
    (lambda () (put-text-property (point) (1+ (point)) key value))))
 
