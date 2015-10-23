@@ -32,30 +32,31 @@
 (require 'org-table)
 (require 'button)
 
-;; TODO: remove `budget-prefix'
-(defun org-clock-budget--get-entries-with-budget (from to budget budget-prefix)
+(defun org-clock-budget--get-entries-with-budget (from to budget)
   "Get all tasks with a budget.
 
 FROM and TO specify the time range and should be YYYY-MM-DD
 strings.
 
-BUDGET is type of the budget property, BUDGET-PREFIX is arbitrary
-string which is used to produce return keys, :PREFIX-clock
-and :PREFIX-budget.
+BUDGET is type of the budget property.
 
-Return a list (headline :PREFIX-clock clocked-time :PREFIX-budget
-budget :marker marker-to-headline)"
+CLOCK is a string derived from BUDGET by replacing the string
+\"BUDGET\" with \"CLOCK\".
+
+Return a list (headline CLOCK clocked-time BUDGET budget :marker
+marker-to-headline)"
   (org-clock-sum from to)
-  (let ((result nil)
-        (clock-symbol (intern (concat ":" budget-prefix "-clock")))
-        (budget-symbol (intern (concat ":" budget-prefix "-budget"))))
+  (let ((result nil))
     (org-map-entries
      (lambda ()
        (let* ((clock (get-text-property (point) :org-clock-minutes))
               (current-budget (--when-let (org-entry-get (point) budget)
                               (org-hh:mm-string-to-minutes it))))
          (when current-budget
-           (push (list (org-get-heading t t) clock-symbol (or clock 0) budget-symbol current-budget :marker (point-marker)) result)))))
+           (push (list (org-get-heading t t)
+                       (intern (concat ":"(replace-regexp-in-string "budget" "clock" budget))) (or clock 0)
+                       (intern (concat ":" budget)) current-budget
+                       :marker (point-marker)) result)))))
     (nreverse result)))
 
 (defun org-clock-budget ()
@@ -69,13 +70,11 @@ Currently supported properties are BUDGET_WEEK and BUDGET_YEAR."
   (let ((week (org-clock-budget--get-entries-with-budget
                (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
                (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d")))
-               "BUDGET_WEEK"
-               "week"))
+               "BUDGET_WEEK"))
         (year (org-clock-budget--get-entries-with-budget
                (format-time-string "%Y-01-01")
                (format-time-string "%Y-12-31")
-               "BUDGET_YEAR"
-               "year")))
+               "BUDGET_YEAR")))
     (-map (lambda (x)
             (let ((header (car x)))
               (cons header (apply '-concat (-map 'cdr (cdr x))))))
@@ -151,10 +150,10 @@ Only headlines with at least one budget are shown."
       (insert "|-\n")
       (--each stats
         (-let (((header &keys
-                        :year-clock year-clock
-                        :year-budget year-budget
-                        :week-clock week-clock
-                        :week-budget week-budget
+                        :CLOCK_YEAR year-clock
+                        :BUDGET_YEAR year-budget
+                        :CLOCK_WEEK week-clock
+                        :BUDGET_WEEK week-budget
                         :marker marker) it))
           (insert (format
                    "| %s | %s | %s | %s | %s | %s | %s |\n"
