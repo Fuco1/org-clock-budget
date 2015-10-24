@@ -39,10 +39,12 @@
   :group 'org
   :prefix "org-clock-budget-")
 
-(defcustom org-clock-budget-intervals '(
-                                        ("BUDGET_YEAR" org-clock-budget-interval-this-year)
-                                        ("BUDGET_WEEK" org-clock-budget-interval-this-week)
-                                        )
+(defcustom org-clock-budget-intervals
+  '(
+    ("BUDGET_YEAR" org-clock-budget-interval-this-year)
+    ("BUDGET_MONTH" org-clock-budget-interval-this-month)
+    ("BUDGET_WEEK" org-clock-budget-interval-this-week)
+    )
   "Intervals recognized by `org-clock-budget-report'.
 
 A list of lists (NAME INTERVAL-FN) where:
@@ -51,9 +53,9 @@ A list of lists (NAME INTERVAL-FN) where:
 - INTERVAL-FN: a function of no arguments returning a cons (FROM . TO)
                representing an interval on which clocking for this
                interval takes place."
-  :type '(repeat (list
-                  (string :tag "Name")
-                  (function :tag "Interval")))
+  :type '(alist :key-type (string :tag "Name")
+                :value-type (group (function :tag "Interval function")))
+  :options '("BUDGET_YEAR" "BUDGET_MONTH" "BUDGET_WEEK")
   :group 'org-clock-budget)
 
 (defun org-clock-budget-interval-this-week ()
