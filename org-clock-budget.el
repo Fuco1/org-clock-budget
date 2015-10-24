@@ -29,6 +29,7 @@
 (require 'dash)
 (require 's)
 
+(require 'calendar)
 (require 'org)
 (require 'org-table)
 (require 'button)
@@ -60,6 +61,16 @@ A list of lists (NAME INTERVAL-FN) where:
   (cons
    (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
    (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d")))))
+
+(defun org-clock-budget-interval-this-month ()
+  "Return the interval representing this month."
+  (cons
+   (format-time-string "%Y-%m-01")
+   (format-time-string (format
+                        "%%Y-%%m-%2d"
+                        (calendar-last-day-of-month
+                         (string-to-number (format-time-string "%m"))
+                         (string-to-number (format-time-string "%Y")))))))
 
 (defun org-clock-budget-interval-this-year ()
   "Return the interval representing this year."
