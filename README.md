@@ -4,10 +4,14 @@ Budget your time with `org-mode`!
 
 # How?
 
-Currently two intervals are supported, week and year (I will probably
-add user-definable intervals later).  To add a budget on a task, just
-add a property (`C-c C-x p`) called either `BUDGET_WEEK` or
-`BUDGET_YEAR`.
+You can specify the intervals you want to use by customizing
+`org-clock-budget-intervals`.
+
+Currently three intervals are built-in, week, month and year.  To add
+a budget on a task, just add a property (`C-c C-x p`) called either
+`BUDGET_WEEK`, `BUDGET_MONTH` or `BUDGET_YEAR`.
+
+In addition, users can also define their own intervals.
 
 They can hold two types of values, either a number which is then
 interpreted as number of minutes or a `HH:MM` string which is parsed
