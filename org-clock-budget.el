@@ -61,7 +61,7 @@ marker-to-headline)"
      (lambda ()
        (let* ((clock (get-text-property (point) :org-clock-minutes))
               (current-budget (--when-let (org-entry-get (point) budget)
-                              (org-hh:mm-string-to-minutes it))))
+                                (org-hh:mm-string-to-minutes it))))
          (when current-budget
            (push (list (org-get-heading t t)
                        (org-clock-budget--get-clock-symbol budget) (or clock 0)
