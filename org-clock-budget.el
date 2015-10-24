@@ -6,7 +6,7 @@
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
 ;; Version: 0.0.1
 ;; Created: 23rd October 2015
-;; Package-requires: ((dash "2.10.0"))
+;; Package-requires: ((dash "2.10.0") (s "1.0"))
 ;; Keywords: calendar, convenience
 
 ;; This program is free software; you can redistribute it and/or
@@ -27,6 +27,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 's)
 
 (require 'org)
 (require 'org-table)
