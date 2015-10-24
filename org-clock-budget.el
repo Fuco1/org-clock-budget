@@ -33,6 +33,39 @@
 (require 'org-table)
 (require 'button)
 
+(defgroup org-clock-budget ()
+  "Report to budget time."
+  :group 'org
+  :prefix "org-clock-budget-")
+
+(defcustom org-clock-budget-intervals '(
+                                        ("BUDGET_YEAR" org-clock-budget-interval-this-year)
+                                        ("BUDGET_WEEK" org-clock-budget-interval-this-week)
+                                        )
+  "Intervals recognized by `org-clock-budget-report'.
+
+A list of lists (NAME INTERVAL-FN) where:
+
+- NAME: name of property for this interval, must start with prefix BUDGET_
+- INTERVAL-FN: a function of no arguments returning a cons (FROM . TO)
+               representing an interval on which clocking for this
+               interval takes place."
+  :type '(repeat (list
+                  (string :tag "Name")
+                  (function :tag "Interval")))
+  :group 'org-clock-budget)
+
+(defun org-clock-budget-interval-this-week ()
+  "Return the interval representing this week."
+  (cons
+   (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
+   (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d")))))
+
+(defun org-clock-budget-interval-this-year ()
+  "Return the interval representing this year."
+  (cons
+   (format-time-string "%Y-01-01")
+   (format-time-string "%Y-12-31")))
 
 (defun org-clock-budget--get-budget-symbol (prop-name)
   "Return PROP-NAME as budget symbol."
@@ -76,19 +109,18 @@ Each headline with at least one clock budget specified is
 retrieved with clocked time for the specific time range.  It is
 enough for a headline to have one budget specified.
 
-Currently supported properties are BUDGET_WEEK and BUDGET_YEAR."
-  (let ((week (org-clock-budget--get-entries-with-budget
-               (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
-               (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d")))
-               "BUDGET_WEEK"))
-        (year (org-clock-budget--get-entries-with-budget
-               (format-time-string "%Y-01-01")
-               (format-time-string "%Y-12-31")
-               "BUDGET_YEAR")))
+You can add or remove intervals by customizing
+`org-clock-budget-intervals'."
+  (let ((budgets (-mapcat
+                  (-lambda ((name int-fn))
+                    (-let [(from . to) (funcall int-fn)]
+                      (org-clock-budget--get-entries-with-budget
+                       from to name)))
+                  org-clock-budget-intervals)))
     (-map (lambda (x)
             (let ((header (car x)))
               (cons header (apply '-concat (-map 'cdr (cdr x))))))
-           (-group-by 'car (-concat week year)))))
+          (-group-by 'car budgets))))
 
 (defun org-clock-budget--with-column-header (function)
   "Run FUNCTION with point at header of current column."
@@ -129,6 +161,13 @@ Currently supported properties are BUDGET_WEEK and BUDGET_YEAR."
   "Follow `org-clock-budget-report' BUTTON to the corresponding entry."
   (org-goto-marker-or-bmk (button-get button 'marker)))
 
+(defun org-clock-budget-report-row-format ()
+  "Return format string for a row of `org-clock-budget-report'."
+  (concat
+   "| %s |"
+   (s-repeat (* 3 (length org-clock-budget-intervals)) " %s |")
+   "\n"))
+
 (defun org-clock-budget-report ()
   "Produce a clock budget report.
 
@@ -141,57 +180,55 @@ Only headlines with at least one budget are shown."
         (stats (--mapcat (with-current-buffer (org-get-agenda-file-buffer it)
                            (org-clock-budget))
                          (org-agenda-files)))
-        (sum-year-clock 0)
-        (sum-year-budget 0)
-        (sum-week-clock 0)
-        (sum-week-budget 0))
+        (sums (--map (list (car it) 0 0) org-clock-budget-intervals)))
     (with-current-buffer output
       (read-only-mode -1)
       (erase-buffer)
-      (insert (format
-               "| %s | %s | %s | %s | %s | %s | %s |\n"
+      (insert (apply
+               'format (org-clock-budget-report-row-format)
                (propertize "Task" :org-clock-budget-report-sort ?a)
-               (propertize "Year budget" :org-clock-budget-report-sort ?T)
-               (propertize "Year clocked" :org-clock-budget-report-sort ?T)
-               (propertize "Y C/G" :org-clock-budget-report-sort ?N)
-               (propertize "Week budget" :org-clock-budget-report-sort ?T)
-               (propertize "Week clocked" :org-clock-budget-report-sort ?T)
-               (propertize "W C/G" :org-clock-budget-report-sort ?N)))
+               (--mapcat
+                (let* ((name (cadr (s-match "BUDGET_\\(.*\\)" (car it))))
+                       (name-cap (s-capitalize name)))
+                  (list
+                   (propertize (concat name-cap " budget") :org-clock-budget-report-sort ?T)
+                   (propertize (concat name-cap " clocked") :org-clock-budget-report-sort ?T)
+                   (propertize (concat (substring name-cap 0 1) " C/G") :org-clock-budget-report-sort ?N)))
+                org-clock-budget-intervals)))
       (insert "|-\n")
-      (--each stats
-        (-let (((header &keys
-                        :CLOCK_YEAR year-clock
-                        :BUDGET_YEAR year-budget
-                        :CLOCK_WEEK week-clock
-                        :BUDGET_WEEK week-budget
-                        :marker marker) it))
-          (insert (format
-                   "| %s | %s | %s | %s | %s | %s | %s |\n"
-                   (concat
-                    (replace-regexp-in-string
-                     "|" "{pipe}"
-                     (truncate-string-to-width header 40)))
-                   (if year-budget (org-minutes-to-clocksum-string year-budget) "")
-                   (if year-clock (org-minutes-to-clocksum-string year-clock) "")
-                   (if year-budget (format "%2.1f%%" (* 100 (/ year-clock (float year-budget)))) "")
-                   (if week-budget (org-minutes-to-clocksum-string week-budget) "")
-                   (if week-clock(org-minutes-to-clocksum-string week-clock) "")
-                   (if week-budget (format "%2.1f%%" (* 100 (/ week-clock (float week-budget)))) "")))
-          (incf sum-year-clock (or year-clock 0))
-          (incf sum-year-budget (or year-budget 0))
-          (incf sum-week-clock (or week-clock 0))
-          (incf sum-week-budget (or week-budget 0))
-          (make-text-button (save-excursion (forward-line -1) (point)) (1- (point))
-                            'marker marker
-                            'type 'org-clock-budget-report-button)))
+      (-each stats
+        (lambda (row-data)
+          (-let* (((header &keys :marker marker) row-data)
+                  (row (list (concat
+                              (replace-regexp-in-string
+                               "|" "{pipe}"
+                               (truncate-string-to-width header 40))))))
+            (--each org-clock-budget-intervals
+              (-let* ((name (car it))
+                      (clock (org-clock-budget--get-clock-symbol name))
+                      (budget (org-clock-budget--get-budget-symbol name))
+                      ((_ &keys clock clock budget budget) row-data))
+                (incf (cadr (assoc name sums)) (or budget 0))
+                (incf (caddr (assoc name sums)) (or clock 0))
+                (push (if budget (org-minutes-to-clocksum-string budget) "") row)
+                (push (if clock (org-minutes-to-clocksum-string clock) "") row)
+                (push (if budget (format "%2.1f%%" (* 100 (/ clock (float budget)))) "") row)))
+            (insert (apply 'format (org-clock-budget-report-row-format) (nreverse row)))
+            (make-text-button (save-excursion (forward-line -1) (point)) (1- (point))
+                              'marker marker
+                              'type 'org-clock-budget-report-button))))
       (insert "|-\n")
-      (insert (format "| | %s | %s | %s | %s | %s | %s |\n"
-                      (org-minutes-to-clocksum-string sum-year-budget)
-                      (org-minutes-to-clocksum-string sum-year-clock)
-                      (format "%2.1f%%" (* 100 (/ sum-year-clock (float sum-year-budget))))
-                      (org-minutes-to-clocksum-string sum-week-budget)
-                      (org-minutes-to-clocksum-string sum-week-clock)
-                      (format "%2.1f%%" (* 100 (/ sum-week-clock (float sum-week-budget))))))
+      (insert (apply
+               'format (org-clock-budget-report-row-format) ""
+               (--mapcat
+                (let* ((name (car it))
+                       (budget (cadr (assoc name sums)))
+                       (clock (caddr (assoc name sums))))
+                  (list
+                   (org-minutes-to-clocksum-string budget)
+                   (org-minutes-to-clocksum-string clock)
+                   (format "%2.1f%%" (* 100 (/ clock (float budget))))))
+                org-clock-budget-intervals)))
       (org-clock-budget-report-mode)
       (variable-pitch-mode -1)
       (org-table-align)
