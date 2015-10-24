@@ -32,6 +32,15 @@
 (require 'org-table)
 (require 'button)
 
+
+(defun org-clock-budget--get-budget-symbol (prop-name)
+  "Return PROP-NAME as budget symbol."
+  (intern (concat ":" prop-name)))
+
+(defun org-clock-budget--get-clock-symbol (prop-name)
+  "Return PROP-NAME as clock symbol."
+  (intern (concat ":"(replace-regexp-in-string "budget" "clock" prop-name))))
+
 (defun org-clock-budget--get-entries-with-budget (from to budget)
   "Get all tasks with a budget.
 
@@ -54,8 +63,8 @@ marker-to-headline)"
                               (org-hh:mm-string-to-minutes it))))
          (when current-budget
            (push (list (org-get-heading t t)
-                       (intern (concat ":"(replace-regexp-in-string "budget" "clock" budget))) (or clock 0)
-                       (intern (concat ":" budget)) current-budget
+                       (org-clock-budget--get-clock-symbol budget) (or clock 0)
+                       (org-clock-budget--get-budget-symbol budget) current-budget
                        :marker (point-marker)) result)))))
     (nreverse result)))
 
