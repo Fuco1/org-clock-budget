@@ -101,7 +101,7 @@ CLOCK is a string derived from BUDGET by replacing the string
 
 Return a list (headline CLOCK clocked-time BUDGET budget :marker
 marker-to-headline)"
-  (org-clock-sum from to)
+  (org-clock-sum from (concat to " 23:59:59"))
   (let ((result nil))
     (org-map-entries
      (lambda ()
