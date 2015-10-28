@@ -26,6 +26,16 @@ jump to the task.  Hitting `s` on a column will sort, hitting `s`
 again will resort in opposite direction.  Hitting `g` reloads the
 report.
 
+This is how the report looks:
+
+![Report](./static/screen1.png)
+
+For every enabled interval you will get three columns, first the
+budget, then the real clocked time and last a percentage of used up
+budget.  When you go over 100% it means you are overspending.  The
+groups are (horizontally) ordered the same way as
+`org-clock-budget-intervals`.
+
 # F.A.Q.
 
 ## How does this differ from Effort estimates?
