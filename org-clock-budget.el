@@ -261,6 +261,34 @@ Only headlines with at least one budget are shown."
       (read-only-mode 1))
     (pop-to-buffer output)))
 
+(defun org-clock-budget-insert-into-agenda ()
+  "Insert budget/clock information into agenda."
+  (let ((inhibit-read-only t))
+    (save-excursion
+      (goto-char (point-min))
+      (while (not (eobp))
+        (let ((habit (get-text-property (point) 'org-agenda-type)))
+          (when (eq habit 'agenda)
+            (-when-let (regexp (org-get-at-bol 'org-todo-regexp))
+              (when (re-search-forward regexp (line-end-position) t)
+                (-when-let (info (org-clock-budget-agenda-prefix-week))
+                  (insert-before-markers info)
+                  (when (re-search-forward "  " (line-end-position) t)
+                    (delete-char (length info))))))))
+        (forward-line)))))
+
+(defun org-clock-budget-agenda-prefix-week ()
+  "Return agenda prefix for weekly budget."
+  (org-with-point-at (org-get-at-bol 'org-hd-marker)
+    (-when-let (b (org-entry-get (point) "BUDGET_WEEK"))
+      (format
+       " [%s%s]"
+       (-let (((from . to) (org-clock-budget-interval-this-week)))
+         (--if-let (org-clock-budget--get-entry-clocked from to)
+             (concat (org-minutes-to-clocksum-string it) "/")
+           ""))
+       b))))
+
 (defvar org-clock-budget-report-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map org-mode-map)
