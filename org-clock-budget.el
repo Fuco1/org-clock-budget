@@ -89,6 +89,15 @@ A list of lists (NAME INTERVAL-FN) where:
   "Return PROP-NAME as clock symbol."
   (intern (concat ":"(replace-regexp-in-string "budget" "clock" prop-name))))
 
+(defun org-clock-budget--get-entry-clocked (from to)
+  "Return time clocked from FROM to TO of the entry at point."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (org-narrow-to-subtree)
+      (org-clock-sum from to)
+      (org-get-at-bol :org-clock-minutes))))
+
 (defun org-clock-budget--get-entries-with-budget (from to budget)
   "Get all tasks with a budget.
 
@@ -102,19 +111,21 @@ CLOCK is a string derived from BUDGET by replacing the string
 
 Return a list (headline CLOCK clocked-time BUDGET budget :marker
 marker-to-headline)"
-  (org-clock-sum from to)
-  (let ((result nil))
-    (org-map-entries
-     (lambda ()
-       (let* ((clock (get-text-property (point) :org-clock-minutes))
-              (current-budget (--when-let (org-entry-get (point) budget)
-                                (org-hh:mm-string-to-minutes it))))
-         (when current-budget
-           (push (list (org-get-heading t t)
-                       (org-clock-budget--get-clock-symbol budget) (or clock 0)
-                       (org-clock-budget--get-budget-symbol budget) current-budget
-                       :marker (point-marker)) result)))))
-    (nreverse result)))
+  (save-excursion
+    (goto-char (point-min))
+    (let ((result nil)
+          (re (concat ":" budget ":")))
+      (while (re-search-forward re nil t)
+        (-when-let (current-budget (--when-let (org-entry-get (point) budget)
+                                     (org-hh:mm-string-to-minutes it)))
+          (save-excursion
+            (org-back-to-heading)
+            (let* ((clock (org-clock-budget--get-entry-clocked from to)))
+              (push (list (org-get-heading t t)
+                          (org-clock-budget--get-clock-symbol budget) (or clock 0)
+                          (org-clock-budget--get-budget-symbol budget) current-budget
+                          :marker (point-marker)) result)))))
+      (nreverse result))))
 
 (defun org-clock-budget ()
   "Retrieve headlines with clock budget in current buffer.
