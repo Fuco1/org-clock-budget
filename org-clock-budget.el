@@ -60,16 +60,17 @@ A list of lists (NAME INTERVAL-FN) where:
 
 (defun org-clock-budget-interval-this-week ()
   "Return the interval representing this week."
-  (cons
-   (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
-   (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d")))))
+  (let ((case-fold-search t))
+    (cons
+     (org-read-date nil nil "++Mon" nil (org-time-string-to-time (org-read-date nil nil "-7d")))
+     (concat (org-read-date nil nil "--Sun" nil (org-time-string-to-time (org-read-date nil nil "+7d"))) " 23:59:59"))))
 
 (defun org-clock-budget-interval-this-month ()
   "Return the interval representing this month."
   (cons
    (format-time-string "%Y-%m-01")
    (format-time-string (format
-                        "%%Y-%%m-%2d"
+                        "%%Y-%%m-%2d 23:59:59"
                         (calendar-last-day-of-month
                          (string-to-number (format-time-string "%m"))
                          (string-to-number (format-time-string "%Y")))))))
@@ -78,7 +79,7 @@ A list of lists (NAME INTERVAL-FN) where:
   "Return the interval representing this year."
   (cons
    (format-time-string "%Y-01-01")
-   (format-time-string "%Y-12-31")))
+   (format-time-string "%Y-12-31 23:59:59")))
 
 (defun org-clock-budget--get-budget-symbol (prop-name)
   "Return PROP-NAME as budget symbol."
@@ -101,7 +102,7 @@ CLOCK is a string derived from BUDGET by replacing the string
 
 Return a list (headline CLOCK clocked-time BUDGET budget :marker
 marker-to-headline)"
-  (org-clock-sum from (concat to " 23:59:59"))
+  (org-clock-sum from to)
   (let ((result nil))
     (org-map-entries
      (lambda ()
