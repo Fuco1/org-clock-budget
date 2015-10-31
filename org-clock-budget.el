@@ -294,6 +294,7 @@ Only headlines with at least one budget are shown."
     (set-keymap-parent map org-mode-map)
     (define-key map "s" 'org-clock-budget-report-sort)
     (define-key map "g" 'org-clock-budget-report)
+    (define-key map "q" 'quit-window)
     map)
   "Keymap for `org-clock-budget-report-mode'.")
 
