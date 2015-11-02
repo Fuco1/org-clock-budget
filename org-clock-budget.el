@@ -237,11 +237,19 @@ Only headlines with at least one budget are shown."
                 (incf (caddr (assoc name sums)) (or clock 0))
                 (push (if budget (org-minutes-to-clocksum-string budget) "") row)
                 (push (if clock (org-minutes-to-clocksum-string clock) "") row)
-                (push (if budget (format "%2.1f%%" (* 100 (/ clock (float budget)))) "") row)))
+                (push (if budget
+                          (let* ((ratio (* 100 (/ clock (float budget))))
+                                 (ratio-formatted (format "%2.1f%%" ratio)))
+                            (if (< 100 ratio)
+                                (propertize ratio-formatted 'font-lock-face 'font-lock-warning-face)
+                              ratio-formatted))
+                        "") row)))
             (insert (apply 'format (org-clock-budget-report-row-format) (nreverse row)))
-            (make-text-button (save-excursion (forward-line -1) (point)) (1- (point))
-                              'marker marker
-                              'type 'org-clock-budget-report-button))))
+            (make-text-button
+             (save-excursion (forward-line -1) (point))
+             (save-excursion (forward-line -1) (re-search-forward "|" nil nil 2) (- (point) 2))
+             'marker marker
+             'type 'org-clock-budget-report-button))))
       (insert "|-\n")
       (insert (apply
                'format (org-clock-budget-report-row-format) ""
@@ -255,6 +263,9 @@ Only headlines with at least one budget are shown."
                    (format "%2.1f%%" (* 100 (/ clock (float budget))))))
                 org-clock-budget-intervals)))
       (org-clock-budget-report-mode)
+      (setq-local font-lock-keywords nil)
+      (font-lock-mode -1)
+      (font-lock-mode 1)
       (variable-pitch-mode -1)
       (org-table-align)
       (goto-char (point-min))
