@@ -58,6 +58,29 @@ A list of lists (NAME INTERVAL-FN) where:
   :options '("BUDGET_YEAR" "BUDGET_MONTH" "BUDGET_WEEK")
   :group 'org-clock-budget)
 
+(defcustom org-clock-budget-default-sort-column nil
+  "Column on which to sort by default.
+
+If nil, rows are inserted in order they are scanned in the agenda
+files, as returned by `org-agenda-files'.
+
+Otherwise the value is a list (BUDGET VALUE DIRECTION) where
+BUDGET is one of `org-clock-budget-interval', VALUE is a symbol,
+one of 'clock, 'budget, 'ratio determining the column associated
+with the selected BUDGET and DIRECTION is a symbol 'asc or
+'desc."
+  :type '(choice
+          (const :tag "No ordering" nil)
+          (list (string :tag "Name")
+                (choice
+                 (const :tag "Ratio" ratio)
+                 (const :tag "Clock" clock)
+                 (const :tag "Budget" budget))
+                (choice
+                 (const :tag "Descending" desc)
+                 (const :tag "Ascending" asc))))
+  :group 'org-clock-budget)
+
 (defun org-clock-budget-interval-this-week ()
   "Return the interval representing this week."
   (let ((case-fold-search t))
@@ -194,6 +217,23 @@ You can add or remove intervals by customizing
    (s-repeat (* 3 (length org-clock-budget-intervals)) " %s |")
    "\n"))
 
+(defun org-clock-budget-report-initial-sort ()
+  "Sort the columns of `org-clock-budget-report'."
+  (save-excursion
+    (-when-let* (((name value direction) org-clock-budget-default-sort-column)
+                 (index (--find-index (equal name it) (-map 'car org-clock-budget-intervals)))
+                 (offset (cond
+                          ((eq value 'budget) 0)
+                          ((eq value 'clock) 1)
+                          ((eq value 'ratio) 2))))
+      (goto-char (point-min))
+      (forward-line 2)
+      (org-table-goto-column (+ 2 (* 3 index) offset))
+      (let* ((dir (org-clock-budget-report-sort))
+             (dir (if (s-uppercase? (string dir)) 'asc 'desc)))
+        (unless (eq direction dir)
+          (org-clock-budget-report-sort))))))
+
 (defun org-clock-budget-report ()
   "Produce a clock budget report.
 
@@ -270,6 +310,7 @@ Only headlines with at least one budget are shown."
       (variable-pitch-mode -1)
       (org-table-align)
       (goto-char (point-min))
+      (org-clock-budget-report-initial-sort)
       (read-only-mode 1))
     (pop-to-buffer output)))
 
