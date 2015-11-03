@@ -169,15 +169,16 @@ You can add or remove intervals by customizing
 (defun org-clock-budget-report-sort ()
   "Sort the column under point."
   (interactive)
-  (let ((sort-type (org-clock-budget--get-column-property
-                    :org-clock-budget-report-sort))
-        (inhibit-read-only t))
+  (let* ((sort-type (org-clock-budget--get-column-property
+                     :org-clock-budget-report-sort))
+         (inhibit-read-only t)
+         (new-sort-type (if (= (downcase sort-type) sort-type)
+                            (upcase sort-type)
+                          (downcase sort-type))))
     (org-table-sort-lines nil sort-type)
     (org-clock-budget--set-column-property
-     :org-clock-budget-report-sort
-      (if (= (downcase sort-type) sort-type)
-          (upcase sort-type)
-        (downcase sort-type)))))
+     :org-clock-budget-report-sort new-sort-type)
+    new-sort-type))
 
 (define-button-type 'org-clock-budget-report-button
   'action 'org-clock-budget-report-button-action)
