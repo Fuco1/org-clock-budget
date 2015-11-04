@@ -81,6 +81,20 @@ with the selected BUDGET and DIRECTION is a symbol 'asc or
                  (const :tag "Ascending" asc))))
   :group 'org-clock-budget)
 
+(defcustom org-clock-budget-ratio-faces '((1.0 font-lock-warning-face))
+  "An alist determining formatted ratio colors.
+
+The `car' is a float determining ratio of clock vs budget.  If
+the ratio is over this value, the `cadr' (face) is used to
+colorize it in the report.
+
+The highest smaller possible ratio is used to determine the
+face."
+  :type '(alist :key-type (float :tag "Ratio")
+                :value-type (group (face :tag "Face")))
+  :options '(1.0)
+  :group 'org-clock-budget)
+
 (defun org-clock-budget-interval-this-week ()
   "Return the interval representing this week."
   (let ((case-fold-search t))
@@ -234,6 +248,17 @@ You can add or remove intervals by customizing
         (unless (eq direction dir)
           (org-clock-budget-report-sort))))))
 
+(defun org-clock-budget-report-format-ratio (ratio)
+  "Format RATIO.
+
+Ratio is clock / budget."
+  (let* ((ratio-formatted (format "%2.1f%%" (* 100 ratio)))
+         (sorted-ratios (--sort (> (car it) (car other)) org-clock-budget-ratio-faces))
+         (face (cadr (--first (> ratio (car it)) sorted-ratios))))
+    (if face
+        (propertize ratio-formatted 'font-lock-face face)
+      ratio-formatted)))
+
 (defun org-clock-budget-report ()
   "Produce a clock budget report.
 
@@ -279,11 +304,7 @@ Only headlines with at least one budget are shown."
                 (push (if budget (org-minutes-to-clocksum-string budget) "") row)
                 (push (if clock (org-minutes-to-clocksum-string clock) "") row)
                 (push (if budget
-                          (let* ((ratio (* 100 (/ clock (float budget))))
-                                 (ratio-formatted (format "%2.1f%%" ratio)))
-                            (if (< 100 ratio)
-                                (propertize ratio-formatted 'font-lock-face 'font-lock-warning-face)
-                              ratio-formatted))
+                          (org-clock-budget-report-format-ratio (/ clock (float budget)))
                         "") row)))
             (insert (apply 'format (org-clock-budget-report-row-format) (nreverse row)))
             (make-text-button
