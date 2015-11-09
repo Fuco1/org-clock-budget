@@ -156,7 +156,7 @@ marker-to-headline)"
         (-when-let (current-budget (--when-let (org-entry-get (point) budget)
                                      (org-hh:mm-string-to-minutes it)))
           (save-excursion
-            (org-back-to-heading)
+            (org-back-to-heading t)
             (let* ((clock (org-clock-budget--get-entry-clocked from to)))
               (push (list (org-get-heading t t)
                           (org-clock-budget--get-clock-symbol budget) (or clock 0)
