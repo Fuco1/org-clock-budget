@@ -301,9 +301,9 @@ Only headlines with at least one budget are shown."
                       ((_ &keys clock clock budget budget) row-data))
                 (incf (cadr (assoc name sums)) (or budget 0))
                 (incf (caddr (assoc name sums)) (or clock 0))
-                (push (if budget (org-minutes-to-clocksum-string budget) "") row)
-                (push (if clock (org-minutes-to-clocksum-string clock) "") row)
-                (push (if budget
+                (push (if (and budget (> budget 0)) (org-minutes-to-clocksum-string budget) "") row)
+                (push (if (and clock (> clock 0)) (org-minutes-to-clocksum-string clock) "") row)
+                (push (if (and budget (> budget 0))
                           (org-clock-budget-report-format-ratio (/ clock (float budget)))
                         "") row)))
             (insert (apply 'format (org-clock-budget-report-row-format) (nreverse row)))
