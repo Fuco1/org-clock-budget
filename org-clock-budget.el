@@ -217,6 +217,20 @@ You can add or remove intervals by customizing
      :org-clock-budget-report-sort new-sort-type)
     new-sort-type))
 
+(defun org-clock-budget-remove-budget ()
+  "Remove budgets from the task under point."
+  (interactive)
+  (org-with-point-at (save-excursion
+                       (beginning-of-line)
+                       (forward-char 2)
+                       (get-text-property (point) 'marker))
+      (--each (-map 'car org-clock-budget-intervals)
+     (org-entry-delete (point) it)))
+  (let ((inhibit-read-only t)
+        (column (current-column)))
+    (delete-region (point-at-bol) (progn (forward-line 1) (point)))
+    (move-to-column column)))
+
 (define-button-type 'org-clock-budget-report-button
   'action 'org-clock-budget-report-button-action)
 
@@ -368,6 +382,7 @@ Only headlines with at least one budget are shown."
     (set-keymap-parent map org-mode-map)
     (define-key map "s" 'org-clock-budget-report-sort)
     (define-key map "g" 'org-clock-budget-report)
+    (define-key map "D" 'org-clock-budget-remove-budget)
     (define-key map "q" 'quit-window)
     map)
   "Keymap for `org-clock-budget-report-mode'.")
