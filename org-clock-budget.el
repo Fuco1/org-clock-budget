@@ -1,12 +1,12 @@
 ;;; org-clock-budget.el --- Budget your time with org! -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 Matúš Goljer
+;; Copyright (C) 2015-2017 Matúš Goljer
 
 ;; Author: Matúš Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
 ;; Version: 0.0.1
 ;; Created: 23rd October 2015
-;; Package-requires: ((dash "2.10.0") (s "1.0"))
+;; Package-requires: ((dash "2.10.0") (s "1.0") (cl-lib "0.6.0"))
 ;; Keywords: calendar, convenience
 
 ;; This program is free software; you can redistribute it and/or
@@ -26,6 +26,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-lib))
 (require 'dash)
 (require 's)
 
@@ -313,8 +314,8 @@ Only headlines with at least one budget are shown."
                       (clock (org-clock-budget--get-clock-symbol name))
                       (budget (org-clock-budget--get-budget-symbol name))
                       ((_ &keys clock clock budget budget) row-data))
-                (incf (cadr (assoc name sums)) (or budget 0))
-                (incf (caddr (assoc name sums)) (or clock 0))
+                (cl-incf (cadr (assoc name sums)) (or budget 0))
+                (cl-incf (cl-caddr (assoc name sums)) (or clock 0))
                 (push (if (and budget (> budget 0)) (org-minutes-to-clocksum-string budget) "") row)
                 (push (if (and clock (> clock 0)) (org-minutes-to-clocksum-string clock) "") row)
                 (push (if (and budget (> budget 0))
@@ -332,7 +333,7 @@ Only headlines with at least one budget are shown."
                (--mapcat
                 (let* ((name (car it))
                        (budget (cadr (assoc name sums)))
-                       (clock (caddr (assoc name sums))))
+                       (clock (cl-caddr (assoc name sums))))
                   (list
                    (org-minutes-to-clocksum-string budget)
                    (org-minutes-to-clocksum-string clock)
