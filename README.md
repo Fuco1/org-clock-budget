@@ -57,7 +57,7 @@ and you wish to work on it for 3 weeks.  Therefore, you'd budget 10
 hours weekly to work on this task and no more, allocating the rest of
 the time to other tasks.  If your estimate was too little, you will
 simply extend the period for another week of 10 hours.  If it was too
-little, you can re-budget the surplus time on other tasks.
+much, you can re-budget the surplus time on other tasks.
 
 ## Why should I want to budget my time?
 
