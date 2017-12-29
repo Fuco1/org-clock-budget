@@ -43,6 +43,7 @@
 (defcustom org-clock-budget-intervals
   '(
     ("BUDGET_YEAR" org-clock-budget-interval-this-year)
+    ("BUDGET_QUARTER" org-clock-budget-interval-this-quarter)
     ("BUDGET_MONTH" org-clock-budget-interval-this-month)
     ("BUDGET_WEEK" org-clock-budget-interval-this-week)
     )
