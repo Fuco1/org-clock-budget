@@ -43,6 +43,7 @@
 (defcustom org-clock-budget-intervals
   '(
     ("BUDGET_YEAR" org-clock-budget-interval-this-year)
+    ("BUDGET_QUARTER" org-clock-budget-interval-this-quarter)
     ("BUDGET_MONTH" org-clock-budget-interval-this-month)
     ("BUDGET_WEEK" org-clock-budget-interval-this-week)
     )
@@ -112,6 +113,22 @@ face."
                         (calendar-last-day-of-month
                          (string-to-number (format-time-string "%m"))
                          (string-to-number (format-time-string "%Y")))))))
+
+(defun org-clock-budget-interval-this-quarter ()
+  "Return the interval representing this quarter (3-month period)."
+  (let* ((current-quarter
+          ;; [0, 3]
+          (/ (- (string-to-number (format-time-string "%m")) 1) 3))
+         (first-month (+ (* 3 current-quarter) 1))
+         (last-month (+ first-month 2)))
+    (cons
+     (format-time-string (format "%%Y-%2d-01" first-month))
+     (format-time-string (format
+                          "%%Y-%2d-%2d 23:59:59"
+                          last-month
+                          (calendar-last-day-of-month
+                           last-month
+                           (string-to-number (format-time-string "%Y"))))))))
 
 (defun org-clock-budget-interval-this-year ()
   "Return the interval representing this year."

@@ -7,9 +7,10 @@ Budget your time with `org-mode`!
 You can specify the intervals you want to use by customizing
 `org-clock-budget-intervals`.
 
-Currently three intervals are built-in, week, month and year.  To add
-a budget on a task, just add a property (`C-c C-x p`) called either
-`BUDGET_WEEK`, `BUDGET_MONTH` or `BUDGET_YEAR`.
+Currently four intervals are built-in, week, month, quarter (3-month period)
+and year. To add a budget on a task, just add a property (`C-c C-x p`)
+called either `BUDGET_WEEK`, `BUDGET_MONTH`, `BUDGET_QUARTER`, or
+`BUDGET_YEAR`.
 
 In addition, users can also define their own intervals.
 
@@ -56,7 +57,7 @@ and you wish to work on it for 3 weeks.  Therefore, you'd budget 10
 hours weekly to work on this task and no more, allocating the rest of
 the time to other tasks.  If your estimate was too little, you will
 simply extend the period for another week of 10 hours.  If it was too
-little, you can re-budget the surplus time on other tasks.
+much, you can re-budget the surplus time on other tasks.
 
 ## Why should I want to budget my time?
 
