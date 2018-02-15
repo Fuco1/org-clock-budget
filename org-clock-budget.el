@@ -109,7 +109,7 @@ face."
   (cons
    (format-time-string "%Y-%m-01")
    (format-time-string (format
-                        "%%Y-%%m-%2d 23:59:59"
+                        "%%Y-%%m-%02d 23:59:59"
                         (calendar-last-day-of-month
                          (string-to-number (format-time-string "%m"))
                          (string-to-number (format-time-string "%Y")))))))
@@ -122,9 +122,9 @@ face."
          (first-month (+ (* 3 current-quarter) 1))
          (last-month (+ first-month 2)))
     (cons
-     (format-time-string (format "%%Y-%2d-01" first-month))
+     (format-time-string (format "%%Y-%02d-01" first-month))
      (format-time-string (format
-                          "%%Y-%2d-%2d 23:59:59"
+                          "%%Y-%02d-%02d 23:59:59"
                           last-month
                           (calendar-last-day-of-month
                            last-month
