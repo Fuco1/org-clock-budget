@@ -57,7 +57,7 @@ A list of lists (NAME INTERVAL-FN) where:
                interval takes place."
   :type '(alist :key-type (string :tag "Name")
                 :value-type (group (function :tag "Interval function")))
-  :options '("BUDGET_YEAR" "BUDGET_MONTH" "BUDGET_WEEK")
+  :options '("BUDGET_YEAR" "BUDGET_QUARTER" "BUDGET_MONTH" "BUDGET_WEEK")
   :group 'org-clock-budget)
 
 (defcustom org-clock-budget-default-sort-column nil
