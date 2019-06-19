@@ -83,6 +83,13 @@ with the selected BUDGET and DIRECTION is a symbol 'asc or
                  (const :tag "Ascending" asc))))
   :group 'org-clock-budget)
 
+(defcustom org-clock-budget-match nil
+  "A match expression to filter items included in the report."
+  :type '(choice
+          (const :tag "Include all items with BUDGET_* property" nil)
+          (string :tag "Match expression"))
+  :group 'org-clock-budget)
+
 (defcustom org-clock-budget-ratio-faces '((1.0 font-lock-warning-face))
   "An alist determining formatted ratio colors.
 
