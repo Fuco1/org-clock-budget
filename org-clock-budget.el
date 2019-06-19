@@ -314,8 +314,8 @@ Only headlines with at least one budget are shown."
                 (let* ((name (cadr (s-match "BUDGET_\\(.*\\)" (car it))))
                        (name-cap (s-capitalize name)))
                   (list
-                   (propertize (concat name-cap " budget") :org-clock-budget-report-sort ?T)
-                   (propertize (concat name-cap " clocked") :org-clock-budget-report-sort ?T)
+                   (propertize (concat (substring name-cap 0 1) " budget") :org-clock-budget-report-sort ?T)
+                   (propertize (concat (substring name-cap 0 1) " clocked") :org-clock-budget-report-sort ?T)
                    (propertize (concat (substring name-cap 0 1) " C/G") :org-clock-budget-report-sort ?N)))
                 org-clock-budget-intervals)))
       (insert "|-\n")
