@@ -90,8 +90,12 @@ with the selected BUDGET and DIRECTION is a symbol 'asc or
           (string :tag "Match expression"))
   :group 'org-clock-budget)
 
-(defcustom org-clock-budget-ratio-faces '((1.0 font-lock-warning-face))
-  "An alist determining formatted ratio colors.
+(defcustom org-clock-budget-ratio-faces '(
+                                          (1.0 error)
+                                          (0.8 warning)
+                                          (0.0 success)
+                                          )
+  "An alist determining formatted ratio colors for clocked to budgeted.
 
 The `car' is a float determining ratio of clock vs budget.  If
 the ratio is over this value, the `cadr' (face) is used to
