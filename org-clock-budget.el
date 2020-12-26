@@ -108,6 +108,33 @@ face."
   :options '(1.0)
   :group 'org-clock-budget)
 
+(defcustom org-clock-budgeted-ratio-faces '(
+                                            (0.8 success)
+                                            (0.6 warning)
+                                            (0.0 error)
+                                            )
+  "An alist determining formatted ratio colors for budgeted to budgetable.
+
+The `car' is a float determining ratio of clock vs budget.  If
+the ratio is over this value, the `cadr' (face) is used to
+colorize it in the report.
+
+The highest smaller possible ratio is used to determine the
+face."
+  :type '(alist :key-type (float :tag "Ratio")
+                :value-type (group (face :tag "Face")))
+  :options '(1.0)
+  :group 'org-clock-budget)
+
+(defcustom org-clock-budget-daily-budgetable-hours 12
+  "How many hours per day we want to budget.
+
+Generally we should only include the time in which budgeted
+activities take place, such as work, projects, workouts, chores
+etc."
+  :type 'float
+  :group 'org-clock-budget)
+
 (defun org-clock-budget-interval-this-week ()
   "Return the interval representing this week."
   (let ((case-fold-search t))
@@ -163,6 +190,14 @@ face."
       (org-narrow-to-subtree)
       (org-clock-sum from to)
       (org-get-at-bol :org-clock-minutes))))
+
+(defun org-clock-budget--get-budgetable-hours (budget)
+  (-let* (((&alist budget (int-fn)) org-clock-budget-intervals)
+          ((from . to) (funcall int-fn))
+          (days (1+ (- (time-to-days (org-time-string-to-time to))
+                       (time-to-days (org-time-string-to-time from)))))
+          (hours (* days org-clock-budget-daily-budgetable-hours)))
+    hours))
 
 (defun org-clock-budget--get-entries-with-budget (from to budget)
   "Get all tasks with a budget.
@@ -291,13 +326,16 @@ You can add or remove intervals by customizing
         (unless (eq direction dir)
           (org-clock-budget-report-sort))))))
 
-(defun org-clock-budget-report-format-ratio (ratio)
+(defun org-clock-budget-report-format-ratio (ratio &optional inverse)
   "Format RATIO.
 
 Ratio is clock / budget."
   (let* ((ratio-formatted (format "%2.1f%%" (* 100 ratio)))
-         (sorted-ratios (--sort (> (car it) (car other)) org-clock-budget-ratio-faces))
-         (face (cadr (--first (> ratio (car it)) sorted-ratios))))
+         (sorted-ratios (--sort (> (car it) (car other))
+                                (if inverse
+                                    org-clock-budgeted-ratio-faces
+                                  org-clock-budget-ratio-faces)))
+         (face (cadr (--first (>= ratio (car it)) sorted-ratios))))
     (if face
         (propertize ratio-formatted 'font-lock-face face)
       ratio-formatted)))
@@ -357,7 +395,8 @@ Only headlines with at least one budget are shown."
              'type 'org-clock-budget-report-button))))
       (insert "|-\n")
       (insert (apply
-               'format (org-clock-budget-report-row-format) ""
+               'format (org-clock-budget-report-row-format)
+               "Budgeted/Clocked"
                (--mapcat
                 (let* ((name (car it))
                        (budget (cadr (assoc name sums)))
@@ -365,7 +404,21 @@ Only headlines with at least one budget are shown."
                   (list
                    (org-minutes-to-clocksum-string budget)
                    (org-minutes-to-clocksum-string clock)
-                   (format "%2.1f%%" (* 100 (/ clock (float budget))))))
+                   (org-clock-budget-report-format-ratio (/ clock (float budget)))))
+                org-clock-budget-intervals)))
+      (insert "|-\n")
+      (insert (apply
+               'format (org-clock-budget-report-row-format)
+               "Budgetable hours"
+               (--mapcat
+                (let* ((name (car it))
+                       (budgetable (* 60 (org-clock-budget--get-budgetable-hours name)))
+                       (budget (cadr (assoc name sums))))
+                  (list (org-minutes-to-clocksum-string budgetable)
+                        (org-minutes-to-clocksum-string (- budgetable budget))
+                        (org-clock-budget-report-format-ratio
+                         (/ budget (float budgetable))
+                         :inverse)))
                 org-clock-budget-intervals)))
       (org-clock-budget-report-mode)
       (setq-local font-lock-keywords nil)
