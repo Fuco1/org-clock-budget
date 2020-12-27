@@ -2,30 +2,43 @@
 
 Budget your time with `org-mode`!
 
-# How?
+# Usage
+
+## Adding budgets
 
 You can specify the intervals you want to use by customizing
 `org-clock-budget-intervals`.
 
-Currently four intervals are built-in, week, month, quarter (3-month period)
-and year. To add a budget on a task, just add a property (`C-c C-x p`)
-called either `BUDGET_WEEK`, `BUDGET_MONTH`, `BUDGET_QUARTER`, or
-`BUDGET_YEAR`.
+Currently four intervals are built-in, week, month, quarter (3-month
+periods starting January 1st) and year. To add a budget on a task, add
+a property (`C-c C-x p`) called either `BUDGET_WEEK`, `BUDGET_MONTH`,
+`BUDGET_QUARTER`, or `BUDGET_YEAR`.
 
-In addition, users can also define their own intervals.
+In addition, users can also define their own intervals by adding a
+name and a function calculating the `(FROM . TO)` interval for your
+name to `org-clock-budget-intervals`.
 
-They can hold two types of values, either a number which is then
-interpreted as number of minutes or a `HH:MM` string which is parsed
-in the obvious way.
+The properties can hold two types of values, either a number which is
+then interpreted as number of minutes or a `HH:MM` string which is
+parsed in the obvious way.
 
 The budgets are repeating, which means each next interval will get the
 same budget as the previous.  You can remove the property to remove
 the budget.
 
-Then run `M-x org-clock-budget-report`.  You can click on the names to
-jump to the task.  Hitting `s` on a column will sort, hitting `s`
-again will resort in opposite direction.  Hitting `g` reloads the
-report.
+You can specify how many hours per day you want to have available for
+budgeting (i.e. _budgetable_).  This is configured with
+`org-clock-budget-daily-budgetable-hours`.  By default it's 12 hours,
+assuming the 8 hour work day with 4 hours of leisure activities.  The
+number of hours per budget-interval is calculated based on the number
+of days in said interval, that is 7 for a week, 28-31 for months and
+so on.
+
+## Running reports
+
+Run `M-x org-clock-budget-report`.  You can click on the names to jump
+to the task.  Hitting `s` on a column will sort, hitting `s` again
+will resort in opposite direction.  Hitting `g` reloads the report.
 
 This is how the report looks:
 
@@ -36,6 +49,27 @@ budget, then the real clocked time and last a percentage of used up
 budget.  When you go over 100% it means you are overspending.  The
 groups are (horizontally) ordered the same way as
 `org-clock-budget-intervals`.
+
+The report also includes a row describing how many hours from the
+interval are already budgeted and how many can still be assigned to an
+activity:
+
+```
+| Task                | Y budget | Y clocked | Y C/G | M budget | M clocked | M C/G | W budget | W clocked | W C/G |
+|---------------------+----------+-----------+-------+----------+-----------+-------+----------+-----------+-------|
+    ...
+    ...
+| Budgeted/Clocked    |  3502:00 |   1468:06 | 41.9% |   122:00 |     50:05 | 41.1% |    75:20 |      0:00 |  0.0% |
+|---------------------+----------+-----------+-------+----------+-----------+-------+----------+-----------+-------|
+| Budgetable hours    |  4392:00 |    890:00 | 79.7% |   372:00 |    250:00 | 32.8% |    84:00 |      8:40 | 89.7% |
+
+legend for the last row: ^Total budgetable hours
+                                      ^Remaining hours to budget
+                                               ^ Ratio of how many hours are budgeted against the total
+```
+
+The colors can be customized using `org-clock-budget-ratio-faces` and
+`org-clock-budgeted-ratio-faces`.
 
 # F.A.Q.
 
