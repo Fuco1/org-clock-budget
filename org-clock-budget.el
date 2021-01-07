@@ -351,7 +351,7 @@ Only headlines with at least one budget are shown."
   (let ((output (get-buffer-create "*Org clock budget report*"))
         (stats (--mapcat (with-current-buffer (org-get-agenda-file-buffer it)
                            (org-clock-budget))
-                         (org-agenda-files)))
+                         (org-agenda-files nil t)))
         (sums (--map (list (car it) 0 0) org-clock-budget-intervals)))
     (with-current-buffer output
       (read-only-mode -1)
